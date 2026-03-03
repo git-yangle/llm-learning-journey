@@ -7,7 +7,7 @@
 ### 第一阶段：环境初始化与 Python 复健
 - [x] **Day 1**：Mac 环境配置、Miniconda 安装与 GitHub 仓库初始化。
 - [x] **Day 2**：Python 现代特性复健（Type Hints, asyncio, pydantic）。
-- [ ] **Day 3**：大模型 API 初探，理解 Token、Temperature 等参数。
+- [x] **Day 3**：大模型 API 初探，理解 Token、Temperature 等参数。
 
 ### 第二阶段：AI Coding 与 MCP 技能实战 (配合 Claude Code)
 - [ ] **Day 4**：Claude Code 安装配置与纯终端 AI 结对编程工作流适应。
