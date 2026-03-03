@@ -3,7 +3,10 @@ import time
 from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from time_log import time_logger
+import os
+from dotenv import load_dotenv
+load_dotenv()
+print(f"加载到的 Key: {os.getenv('MY_LLM_KEY')}")
 
 # 1. Type Hints & Pydantic 建模
 class UserQuery(BaseModel):
