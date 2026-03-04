@@ -5,6 +5,8 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 import os
 from dotenv import load_dotenv
+
+from time_log import time_logger
 load_dotenv()
 print(f"加载到的 Key: {os.getenv('MY_LLM_KEY')}")
 
