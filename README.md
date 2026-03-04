@@ -10,10 +10,10 @@
 - [x] **Day 3**：大模型 API 初探，理解 Token、Temperature 等参数。
 
 ### 第二阶段：AI Coding 与 MCP 技能实战 (配合 Claude Code)
-- [ ] **Day 4**：Claude Code 安装配置与纯终端 AI 结对编程工作流适应。
-- [ ] **Day 5**：深入理解 Model Context Protocol (MCP) 核心架构与 Client/Server 机制。
-- [ ] **Day 6**：Demo 项目 (一) - 使用 Python 编写自定义 MCP Server（如读取本地日志的 Skill）。
-- [ ] **Day 7**：Demo 项目 (二) - 将 MCP Server 接入 Claude Code 联调并开源代码。
+- [x] **Day 4**：Claude Code 深度配置 — 掌握 `CLAUDE.md` 项目指令编写规范、Memory 持久化系统、`settings.json` 权限控制，理解 Claude Code 上下文加载机制。
+- [ ] **Day 5**：自定义 Skills（斜杠命令）与 Hooks 实战 — 编写 `.claude/commands/*.md` 实现 `/commit`、`/review` 等工作流命令；掌握 pre/post tool call Hooks 机制。
+- [ ] **Day 6**：深入理解 MCP 核心架构与 Client/Server 机制 — 使用 Python MCP SDK 编写自定义 MCP Server（如本地日志读取工具），通过 `claude mcp add` 注册并验证。
+- [ ] **Day 7**：综合实战 — 将 `CLAUDE.md` + Skills + MCP Server 整合进真实项目工作流，联调完整链路并将代码开源。
 
 ### 第三阶段：仿“豆包”大模型对话 App 开发
 - [ ] **Day 8**：RAG 与 LangChain/LlamaIndex 核心框架学习。
