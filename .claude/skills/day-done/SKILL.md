@@ -17,10 +17,10 @@ allowed-tools: Bash(git:*), Read, Edit
 ## 执行步骤
 
 1. 检查参数：若 $ARGUMENTS 为空，提示用法 `/day-done [天数] [提交信息]`，终止执行
-2. 更新 README.md：将 `- [ ] **Day $1**` 替换为 `- [x] **Day $1**`；告知用户检查，决定是否继续
+2. 更新 README.md：将 `- [ ] **Day $0**` 替换为 `- [x] **Day $1**`；告知用户检查，决定是否继续
 3. 若无任何文件变更，提示”无内容可提交”，终止执行
 4. 展示将要提交的文件列表，等待用户回复”确认”或”ok”后继续
-5. 执行：`git add -A` → `git commit -m “$2”`
+5. 执行：`git add -A` → `git commit -m “$1”`
 6. 告知 commit 完成，**提示用户手动执行 `git push`**，不自动 push
 
 ## 禁止行为

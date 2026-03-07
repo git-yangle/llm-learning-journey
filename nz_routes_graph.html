@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>新西兰南岛旅行路线图</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.css"/>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-polylinedecorator@1.6.0/dist/leaflet.polylineDecorator.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Microsoft YaHei', 'PingFang SC', Arial, sans-serif; }
+    #map { width: 100%; height: 100vh; }
+
+    .panel {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.96);
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      min-width: 230px;
+    }
+    .panel-title { font-size: 14px; font-weight: bold; color: #222; margin-bottom: 10px; }
+
+    /* 图例行 */
+    .legend-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 12px; color: #444; }
+    .legend-swatch { width: 32px; height: 4px; border-radius: 2px; flex-shrink: 0; }
+
+    /* 筛选按钮组 */
+    .filter-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+    }
+    .filter-btn {
+      flex: 1;
+      min-width: 56px;
+      padding: 5px 0;
+      font-size: 12px;
+      font-weight: bold;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      background: #f5f5f5;
+      color: #555;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.18s;
+    }
+    .filter-btn:hover { opacity: 0.85; }
+    .filter-btn.active {
+      color: #fff;
+      border-color: transparent;
+    }
+
+    .panel-note { margin-top: 10px; font-size: 11px; color: #999; }
+
+    /* Leaflet DivIcon 重置 */
+    .lbl-city { background: transparent !important; border: none !important; }
+    .lbl-day  { background: transparent !important; border: none !important; }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+
+<div class="panel">
+  <div class="panel-title">新西兰南岛路线对比</div>
+
+  <div class="legend-row">
+    <div class="legend-swatch" style="background:#e74c3c;"></div>
+    <span>方案一：赏秋专线（约1785km）</span>
+  </div>
+  <div class="legend-row">
+    <svg width="32" height="8" style="flex-shrink:0">
+      <line x1="0" y1="4" x2="32" y2="4" stroke="#2980b9" stroke-width="4" stroke-dasharray="8,4"/>
+    </svg>
+    <span>方案二：经典小环线（约2195km）</span>
+  </div>
+  <div class="legend-row">
+    <div class="legend-swatch" style="background:#27ae60;"></div>
+    <span>★ 方案三：银蕨秘境（约1190km）</span>
+  </div>
+
+  <!-- 筛选按钮 -->
+  <div class="filter-group">
+    <button class="filter-btn active" id="btn-all"
+            style="background:#555; border-color:#555;"
+            onclick="filterRoutes(-1)">全部</button>
+    <button class="filter-btn" id="btn-0"
+            onclick="filterRoutes(0)">方案一</button>
+    <button class="filter-btn" id="btn-1"
+            onclick="filterRoutes(1)">方案二</button>
+    <button class="filter-btn" id="btn-2"
+            onclick="filterRoutes(2)">方案三</button>
+  </div>
+
+  <div class="panel-note">
+    箭头表示行进方向 · 边标签：Day N · 行程时间<br>
+    往返路线显示双向箭头
+  </div>
+</div>
+
+<script>
+// ── 地图初始化 ──────────────────────────────────────────
+const map = L.map('map', { center: [-44.2, 170.6], zoom: 7 });
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+  subdomains: 'abcd', maxZoom: 19
+}).addTo(map);
+
+// ── 城市坐标 [lat, lng] ──────────────────────────────────
+const C = {
+  '基督城':   [-43.532, 172.636],
+  '凯库拉':   [-42.400, 173.680],
+  '阿卡罗阿': [-43.803, 172.968],
+  '蒂卡波':   [-44.004, 170.477],
+  '特威泽尔': [-44.256, 170.100],
+  '库克山':   [-43.733, 170.096],
+  '瓦纳卡':   [-44.694, 169.141],
+  '克伦威尔': [-45.038, 169.198],
+  '皇后镇':   [-45.031, 168.662],
+  '格林诺奇': [-44.850, 168.383],
+  '但尼丁':   [-45.878, 170.502],
+  '摩拉基':   [-45.361, 170.849],
+  '奥马鲁':   [-45.097, 170.969],
+};
+
+// ── 路线数据 ─────────────────────────────────────────────
+const ROUTES = [
+  {
+    name: '方案一：赏秋专线', color: '#e74c3c',
+    dashArray: null, weight: 3, latOff: 0.012,
+    segments: [
+      { day: 'D1', time: '5h',   path: ['基督城','凯库拉','基督城'],     roundTrip: true },
+      { day: 'D2', time: '3h',   path: ['基督城','蒂卡波'] },
+      { day: 'D3', time: '4h',   path: ['蒂卡波','库克山','瓦纳卡'] },
+      { day: 'D4', time: '1.5h', path: ['瓦纳卡','克伦威尔','皇后镇'] },
+      { day: 'D5', time: '2h',   path: ['皇后镇','格林诺奇','皇后镇'],   roundTrip: true },
+      { day: 'D7', time: '5.5h', path: ['皇后镇','但尼丁','奥马鲁'] },
+      { day: 'D8', time: '3h',   path: ['奥马鲁','基督城'] },
+    ]
+  },
+  {
+    name: '方案二：经典小环线', color: '#2980b9',
+    dashArray: '8,5', weight: 3, latOff: 0,
+    segments: [
+      { day: 'D2', time: '5h',   path: ['基督城','阿卡罗阿','蒂卡波'] },
+      { day: 'D3', time: '2.5h', path: ['蒂卡波','库克山','蒂卡波'],     roundTrip: true },
+      { day: 'D4', time: '3.5h', path: ['蒂卡波','瓦纳卡','皇后镇'] },
+      { day: 'D6', time: '3.5h', path: ['皇后镇','但尼丁'] },
+      { day: 'D7', time: '5h',   path: ['但尼丁','奥马鲁','基督城'] },
+      { day: 'D8', time: '5h',   path: ['基督城','凯库拉','基督城'],     roundTrip: true },
+    ]
+  },
+  {
+    name: '方案三：银蕨秘境（推荐）', color: '#27ae60',
+    dashArray: null, weight: 4, latOff: -0.012,
+    segments: [
+      { day: 'D2', time: '3.5h', path: ['基督城','蒂卡波','特威泽尔'] },
+      { day: 'D3', time: '1.5h', path: ['特威泽尔','库克山','特威泽尔'], roundTrip: true },
+      { day: 'D4', time: '2.5h', path: ['特威泽尔','瓦纳卡','皇后镇'] },
+      { day: 'D7', time: '4h',   path: ['皇后镇','摩拉基','奥马鲁'] },
+      { day: 'D8', time: '3h',   path: ['奥马鲁','基督城'] },
+    ]
+  },
+];
+
+// ── 工具函数 ─────────────────────────────────────────────
+function toCoords(names) { return names.map(n => C[n]); }
+
+function pathMid(coords) {
+  if (coords.length === 1) return coords[0];
+  if (coords.length === 2) return [(coords[0][0]+coords[1][0])/2, (coords[0][1]+coords[1][1])/2];
+  return coords[Math.floor(coords.length / 2)];
+}
+
+function perpOff(p1, p2, delta) {
+  const dlat = p2[0] - p1[0];
+  const dlng = p2[1] - p1[1];
+  const len = Math.sqrt(dlat * dlat + dlng * dlng);
+  if (len < 1e-6) return [delta, 0];
+  return [(-dlng / len) * delta, (dlat / len) * delta];
+}
+
+function shift(coords, dLat, dLng) {
+  return coords.map(([lat, lng]) => [lat + dLat, lng + dLng]);
+}
+
+// 绘制带箭头的折线，加入指定 LayerGroup
+function drawArrow(group, coords, color, weight, dashArray, opacity = 0.85) {
+  const line = L.polyline(coords, { color, weight, opacity, dashArray });
+  group.addLayer(line);
+  const deco = L.polylineDecorator(line, {
+    patterns: [{
+      offset: '100%', repeat: 0,
+      symbol: L.Symbol.arrowHead({
+        pixelSize: 12, polygon: false,
+        pathOptions: { stroke: true, color, weight: 2.5, opacity }
+      })
+    }]
+  });
+  group.addLayer(deco);
+}
+
+// 添加 Day 标签到指定 LayerGroup
+function addDayLabel(group, latlng, text, color) {
+  const marker = L.marker(latlng, {
+    interactive: false,
+    icon: L.divIcon({
+      className: 'lbl-day',
+      html: `<div style="
+        display:inline-block;
+        background:${color};
+        color:#fff;
+        font-size:10px;
+        font-weight:bold;
+        padding:2px 6px;
+        border-radius:8px;
+        white-space:nowrap;
+        box-shadow:0 1px 4px rgba(0,0,0,0.35);
+        opacity:0.92;
+      ">${text}</div>`,
+      iconAnchor: [0, 0]
+    })
+  });
+  group.addLayer(marker);
+}
+
+// ── 按路线构建 LayerGroup ─────────────────────────────────
+// routeGroups[i] 存该路线的所有线/箭头/标签
+const routeGroups = ROUTES.map(() => L.layerGroup().addTo(map));
+
+// cityRoutes[cityName] = Set<routeIndex>，记录城市属于哪些路线
+const cityRoutes = {};
+
+ROUTES.forEach((route, ri) => {
+  const { color, weight, dashArray, latOff } = route;
+  const group = routeGroups[ri];
+
+  route.segments.forEach(seg => {
+    const { day, time, path, roundTrip } = seg;
+
+    // 记录城市归属
+    path.forEach(name => {
+      if (!cityRoutes[name]) cityRoutes[name] = new Set();
+      cityRoutes[name].add(ri);
+    });
+
+    if (roundTrip) {
+      const half = Math.floor(path.length / 2);
+      const goRaw  = toCoords(path.slice(0, half + 1));
+      const retRaw = toCoords(path.slice(half));
+      const [dLat, dLng] = perpOff(goRaw[0], goRaw[goRaw.length - 1], 0.012);
+
+      drawArrow(group, shift(goRaw,   dLat + latOff,  dLng), color, weight, dashArray);
+      drawArrow(group, shift(retRaw, -dLat + latOff, -dLng), color, weight, dashArray);
+
+      const mid = pathMid(goRaw);
+      addDayLabel(group,
+        [mid[0] + Math.abs(dLat) + 0.015, mid[1] + dLng * 0.5],
+        `${day} · ${time}(往返)`, color);
+    } else {
+      const raw = toCoords(path);
+      drawArrow(group, shift(raw, latOff, 0), color, weight, dashArray);
+
+      const mid = pathMid(raw);
+      addDayLabel(group,
+        [mid[0] + 0.018 + latOff, mid[1] + 0.01],
+        `${day} · ${time}`, color);
+    }
+  });
+});
+
+// ── 城市节点（独立管理，按可见路线决定显隐） ────────────────
+// cityMarkers[cityName] = { circle, label }
+const cityMarkers = {};
+
+Object.keys(cityRoutes).forEach(name => {
+  const coords = C[name];
+  if (!coords) return;
+
+  const circle = L.circleMarker(coords, {
+    radius: 6, color: '#333', weight: 2,
+    fillColor: '#fff', fillOpacity: 1,
+    zIndexOffset: 500
+  }).bindTooltip(name, { direction: 'top', offset: [0, -8] });
+
+  const label = L.marker(coords, {
+    interactive: false,
+    zIndexOffset: 600,
+    icon: L.divIcon({
+      className: 'lbl-city',
+      html: `<span style="
+        font-size:11px;
+        font-weight:bold;
+        color:#222;
+        text-shadow: 1px 1px 0 #fff,-1px 1px 0 #fff,
+                     1px -1px 0 #fff,-1px -1px 0 #fff;
+        white-space:nowrap;
+        margin-left:8px;
+      ">${name}</span>`,
+      iconAnchor: [0, 8]
+    })
+  });
+
+  circle.addTo(map);
+  label.addTo(map);
+  cityMarkers[name] = { circle, label };
+});
+
+// ── 路线筛选逻辑 ─────────────────────────────────────────
+// activeIdx: -1 = 全部，0/1/2 = 具体路线索引
+let activeIdx = -1;
+
+const BTN_COLORS = ['#e74c3c', '#2980b9', '#27ae60'];
+
+function filterRoutes(idx) {
+  activeIdx = idx;
+
+  // 更新路线 LayerGroup 显隐
+  routeGroups.forEach((group, i) => {
+    if (idx === -1 || idx === i) {
+      group.addTo(map);
+    } else {
+      group.remove();
+    }
+  });
+
+  // 更新城市节点显隐：城市属于任意可见路线就显示
+  Object.entries(cityMarkers).forEach(([name, { circle, label }]) => {
+    const routes = cityRoutes[name] || new Set();
+    const visible = idx === -1 || routes.has(idx);
+    if (visible) {
+      circle.addTo(map);
+      label.addTo(map);
+    } else {
+      circle.remove();
+      label.remove();
+    }
+  });
+
+  // 更新按钮样式
+  const allBtn = document.getElementById('btn-all');
+  allBtn.className = 'filter-btn' + (idx === -1 ? ' active' : '');
+  allBtn.style.background = idx === -1 ? '#555' : '';
+  allBtn.style.borderColor = idx === -1 ? '#555' : '';
+
+  ROUTES.forEach((route, i) => {
+    const btn = document.getElementById(`btn-${i}`);
+    btn.className = 'filter-btn' + (idx === i ? ' active' : '');
+    btn.style.background = idx === i ? route.color : '';
+    btn.style.borderColor = idx === i ? route.color : '';
+    btn.style.color = idx === i ? '#fff' : '';
+  });
+}
+</script>
+</body>
+</html>
