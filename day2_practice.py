@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 
 from time_log import time_logger
 load_dotenv()
+
 print(f"加载到的 Key: {os.getenv('MY_LLM_KEY')}")
 
 # 1. Type Hints & Pydantic 建模
@@ -24,7 +25,17 @@ class LLMResponse(BaseModel):
     processed_at: str
     latency: float
 
-# 2. Asyncio 异步函数模拟 LLM 调用
+# 2. Student 学生数据模型
+class Student(BaseModel):
+    """定义学生数据模型"""
+    student_id: str
+    name: str = Field(..., min_length=1, description="学生姓名")
+    age: int = Field(..., ge=0, le=150, description="学生年龄")
+    grade: str = Field(..., description="年级，如 '高一'、'大三'")
+    subjects: List[str] = Field(default_factory=list, description="选修科目列表")
+    gpa: Optional[float] = Field(default=None, ge=0.0, le=4.0, description="绩点，可选")
+
+# 3. Asyncio 异步函数模拟 LLM 调用
 @time_logger
 async def mock_llm_call(query: UserQuery) -> LLMResponse:
     print(f"[{datetime.now().strftime('%H:%M:%S')}] 正在处理请求 #{query.query_id}: {query.question}...")
