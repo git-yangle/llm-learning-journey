@@ -1,0 +1,1 @@
+def py_file_check(path_file: str) 
