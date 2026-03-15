@@ -21,9 +21,9 @@ allowed-tools: Bash(git:*), Read, Edit, mcp__study-commit__get_git_commit_info, 
 
 1. 检查参数：若 `$ARG1` 或 `$ARG2` 为空，提示用法 `/day-done [天数] [提交信息]`，终止执行
 2. 调用 mcp study-commit（`get_git_commit_info`）获取当前项目 git 信息；若无任何文件变更，提示”无内容可提交”，终止执行
-3. 更新 README.md：将 `- [ ] **Day $ARG1**` 替换为 `- [x] **Day $ARG1**`；若找不到对应行，提示用户手动确认后继续
-4. 展示 study-commit 返回的当前变更信息（git status + git diff），等待用户回复”确认”或”ok”后继续
-5. 调用 mcp study-commit（`py_file_check`）对本次变更中的 `.py` 文件逐一进行语法检查；若有编译错误，展示错误信息，终止执行；否则继续
+3. 调用 mcp study-commit（`py_file_check`）对本次变更中的 `.py` 文件逐一进行语法检查；若有编译错误，展示错误信息，终止执行；否则继续
+4. 更新 README.md：将 `- [ ] **Day $ARG1**` 替换为 `- [x] **Day $ARG1**`；若找不到对应行，提示用户手动确认后继续
+5. 展示 study-commit 返回的当前变更信息（git status + git diff），等待用户回复”确认”或”ok”后继续
 6. 执行：`git add -A` → `git commit -m “$ARG2”`
 7. 告知 commit 完成，**提示用户手动执行 `git push`**，不自动 push
 
