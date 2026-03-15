@@ -120,6 +120,9 @@ uvicorn server:app --reload
 | `day3/day3.py` | Interactive terminal chatbot with multi-turn conversation history using `AsyncAnthropic`; uses `claude-haiku-4-5-20251001` |
 | `day3/day3_stream.py` | SSE streaming demo via `AsyncAnthropic` with `stream=True`; iterates `content_block_delta` events |
 | `server.py` | FastAPI server with in-memory session management (`sessions` dict keyed by `session_id`); per-session `asyncio.Lock` prevents concurrent replies; `POST /chat`, `DELETE /chat/{session_id}` |
+| `day6/local_mcp_server.py` | stdio 模式 MCP Server（FastMCP），提供 `list_log_files` 和 `read_log_file` 两个工具，通过 `claude mcp add` 注册为本地工具 |
+| `day6/remote_mcp_server.py` | HTTP 模式 Remote MCP Server 示例，支持 streamable HTTP 传输 |
+| `day7/study_commit.py` | HTTP 模式 MCP Server，提供 `get_git_commit_info`（读取 git log + git status）和 `py_file_check`（Python 语法检查）两个工具；带 Bearer Token 鉴权中间件；监听 `127.0.0.1:8766` |
 
 ### Key Patterns
 
